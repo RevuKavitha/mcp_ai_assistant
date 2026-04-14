@@ -61,7 +61,8 @@ Main MCP orchestration code: `backend/app/mcp/agent.py`
 
 ## Implemented Tools
 1. **Web Search Tool (`web_search`)**
-- Scrapes DuckDuckGo HTML endpoint
+- Uses Tavily API when `TAVILY_API_KEY` is configured (recommended)
+- Falls back to DuckDuckGo HTML scraping if no Tavily key is set
 - Returns top results + summary
 - Falls back to mock result if network unavailable
 
@@ -87,6 +88,7 @@ Set environment values in `.env`:
 - `OPENAI_API_KEY=<your_key>`
 - `OPENAI_MODEL=gpt-4o-mini`
 - `OPENAI_BASE_URL=https://api.openai.com/v1`
+- `TAVILY_API_KEY=<optional_but_recommended_for_reliable_web_search>`
 
 Start backend:
 ```bash
