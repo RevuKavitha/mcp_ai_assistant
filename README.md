@@ -5,7 +5,7 @@ Full-stack AI Research Assistant with MCP-style tool-calling architecture.
 ## Tech Stack
 - Frontend: Next.js (App Router) + Tailwind CSS
 - Backend: FastAPI (Python)
-- LLM: Ollama (`llama3`)
+- LLM: Hosted OpenAI-compatible API (default) or Ollama (optional fallback)
 - MCP behavior: custom tool registry + structured tool-calling loop
 - Tools: Web search, document reader, notes database
 
@@ -51,7 +51,7 @@ mcp_ai_assistant/
 
 ## MCP Flow (Tool-Calling Architecture)
 1. User sends query to `POST /chat`
-2. Backend asks Ollama planner for next action (`tool` or `final`)
+2. Backend asks LLM planner for next action (`tool` or `final`)
 3. If `tool`, backend executes tool from MCP registry
 4. Tool result is added to loop context
 5. Loop repeats until model returns `final` answer or max steps reached
@@ -73,25 +73,37 @@ Main MCP orchestration code: `backend/app/mcp/agent.py`
 - SQLite-backed notes storage
 - Actions: `add`, `search`, `recent`
 
-## Backend Setup (FastAPI)
+## Backend Setup (FastAPI + Hosted LLM)
 ```bash
 cd backend
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Run Ollama locally:
-```bash
-ollama serve
-ollama pull llama3
-```
+Set environment values in `.env`:
+- `LLM_PROVIDER=openai`
+- `OPENAI_API_KEY=<your_key>`
+- `OPENAI_MODEL=gpt-4o-mini`
+- `OPENAI_BASE_URL=https://api.openai.com/v1`
 
 Start backend:
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
+
+### Optional Ollama mode
+If you want local Ollama instead:
+```bash
+ollama serve
+ollama pull llama3
+```
+
+Then set:
+- `LLM_PROVIDER=ollama`
+- `OLLAMA_BASE_URL=http://localhost:11434`
+- `OLLAMA_MODEL=llama3`
 
 ## Frontend Setup (Next.js)
 ```bash
@@ -134,4 +146,3 @@ Output:
 ## Notes
 - The web tool may return mocked data if external internet is blocked.
 - For document retrieval, place files under `backend/docs/` or pass a direct path through tool args.
-# mcp_ai_assistant

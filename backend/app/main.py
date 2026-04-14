@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.mcp.agent import MCPAgent
 from app.mcp.registry import MCPTool, ToolRegistry
 from app.schemas import ChatRequest, ChatResponse
+from app.services.llm_client import OpenAIClient
 from app.services.ollama_client import OllamaClient
 from app.tools.document_tool import document_tool
 from app.tools.notes_tool import NotesTool
@@ -40,10 +41,18 @@ app.add_middleware(
 
 
 # --- shared services ---
-ollama = OllamaClient(
-    base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
-    model=os.getenv("OLLAMA_MODEL", "llama3"),
-)
+llm_provider = os.getenv("LLM_PROVIDER", "openai").strip().lower()
+if llm_provider == "ollama":
+    llm = OllamaClient(
+        base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+        model=os.getenv("OLLAMA_MODEL", "llama3"),
+    )
+else:
+    llm = OpenAIClient(
+        api_key=os.getenv("OPENAI_API_KEY", ""),
+        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+        base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+    )
 registry = ToolRegistry()
 notes_tool = NotesTool(db_path=os.getenv("NOTES_DB_PATH", "data/notes.db"))
 
@@ -95,7 +104,7 @@ def register_tools() -> None:
 
 
 register_tools()
-agent = MCPAgent(llm=ollama, registry=registry)
+agent = MCPAgent(llm=llm, registry=registry)
 
 
 @app.get("/health")
